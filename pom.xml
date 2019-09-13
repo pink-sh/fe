@@ -1,0 +1,156 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+
+	<parent>
+		<groupId>apprise-embryo</groupId>
+		<artifactId>embryo-parent</artifactId>
+		<version>1</version>
+	</parent>
+
+	<artifactId>embryo-fe</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+
+	<packaging>pom</packaging>
+
+
+
+	<properties>
+
+		<!-- overrides parent's, overridden in release builds -->
+		<system.version>LATEST</system.version>
+
+		<service.image>registry.gitlab.com/app-rise/embryo/fe</service.image>
+
+		<build.dir>build</build.dir>
+
+	</properties>
+
+
+
+	<build>
+		<plugins>
+		
+		
+			<plugin>
+
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+			
+				<configuration>
+					<executable>yarn</executable>
+				</configuration>
+
+				<executions>
+
+					<!-- calls `yarn` before anything else in clean lifecycle -->
+					<execution>
+						<id>yarn install (clean)</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>pre-clean</phase>
+					</execution>
+
+					<!-- mvn compile => `yarn build` -->
+					<execution>
+						<id>yarn build</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>compile</phase>
+						<configuration>
+							<arguments>
+								<argument>build</argument>
+							</arguments>
+						</configuration>
+					</execution>
+
+				</executions>
+
+			</plugin>
+
+
+			<!-- packs up the build output in a tarball -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>tarball</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>make-tarball-descriptor.xml</descriptor>
+							</descriptors>
+							<finalName>${project.artifactId}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
+
+		</plugins>
+	</build>
+
+
+	<profiles>
+
+
+
+		<!-- (SHELL CALLBACK) deploys jar into dev runtime. -->
+
+		<profile>
+
+			<id>hotdeploy</id>
+			
+			<properties>
+				<mount>${runtime}/dev/fe/code</mount>
+			</properties>
+
+			<build>
+				<plugins>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>hotdeploy</id>
+								<phase>initialize</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<includeEmptyDirs>true</includeEmptyDirs>
+									<resources>
+										<resource>
+											<directory>${build.dir}</directory>
+											<filtering>true</filtering>
+										</resource>
+									</resources>
+									<outputDirectory>${mount}</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+			</build>
+
+
+		</profile>
+
+
+	</profiles>
+
+
+
+</project>

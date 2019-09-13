@@ -1,0 +1,9 @@
+
+exp=$1; shift
+phase=$1; shift
+
+if [ -z "$exp" ]; then
+	echo "no, it's mvn-get <exp> <phase> ...? to evaluate <exp> after an (optional) <phase> and before optional parametgers."
+else
+	echo $(mvn $phase help:evaluate -Dexpression=$exp $@ -q -DforceStdout)
+fi
